@@ -6,12 +6,17 @@ set(SRC_DIR src)
 
 include_directories(
 	include
-	/usr/include/wine/windows
+	#/usr/include/wine/windows
+	/usr/i486-mingw32/include
 )
 
 #wine compiler
-set(CMAKE_CXX_COMPILER /usr/bin/wineg++)
-set(CMAKE_C_COMPILER /usr/bin/winegcc)
+#set(CMAKE_CXX_COMPILER /usr/bin/wineg++)
+#set(CMAKE_C_COMPILER /usr/bin/winegcc)
+
+#mingw
+set(CMAKE_CXX_COMPILER /usr/bin/i486-mingw32-g++)
+set(CMAKE_C_COMPILER /usr/bin/i486-mingw32-gcc)
 
 #set temporally less gcc problems
 set(CMAKE_CXX_FLAGS "-fpermissive -w -m32")
