@@ -27,9 +27,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //-----------------------------------------------------------------------------
 
 #include <windows.h>
-#include <amstream.h>
+
+//#include <amstream.h>
 #include <control.h>
-#include <uuids.h>
+//#include <uuids.h>
 #include <amvideo.h>
 //#include <edevdefs.h>
 #include <dshow.h>

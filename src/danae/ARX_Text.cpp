@@ -53,6 +53,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // Copyright (c) 1999-2000 ARKANE Studios SA. All rights reserved
 //////////////////////////////////////////////////////////////////////////////////////
 #include <windows.h>
+#include <assert.h>
+#include <tchar.h>
 
 #include "ARX_Loc.h"
 #include "ARX_Text.h"
@@ -61,7 +63,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "EERIEDraw.h"
 #include "HERMESMain.h"
 
-#include <assert.h>
 
 //-----------------------------------------------------------------------------
 _TCHAR * lpszFontMenu = NULL;
@@ -782,7 +783,8 @@ bool CARXTextManager::AddText(HFONT _hFont, _TCHAR * _lpszUText, RECT & _rRect, 
 
 		if (pArxText)
 		{
-			pArxText->lpszUText = new _TCHAR[_tcsclen(_lpszUText)+1];
+//			todo: _tcsclen in mingw
+//			pArxText->lpszUText = new _TCHAR[_tcsclen(_lpszUText)+1];
 
 			if (pArxText->lpszUText)
 			{
@@ -853,7 +855,8 @@ bool CARXTextManager::AddText(ARX_TEXT * _pArxText)
 
 		if (pArxText)
 		{
-			pArxText->lpszUText = new _TCHAR[_tcsclen(_pArxText->lpszUText)+1];
+			//			todo: _tcsclen in mingw
+//			pArxText->lpszUText = new _TCHAR[_tcsclen(_pArxText->lpszUText)+1];
 
 			if (pArxText->lpszUText)
 			{

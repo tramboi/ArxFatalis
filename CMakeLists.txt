@@ -8,6 +8,7 @@ include_directories(
 	include
 	#/usr/include/wine/windows
 	/usr/i486-mingw32/include
+	/home/bmonkey/Desktop/dxheaders_2004/Include
 )
 
 #wine compiler
@@ -41,6 +42,6 @@ add_custom_target(remake
         COMMAND make clean && rm CMakeCache.txt && cmake . -G\"Unix Makefiles\" && make -j`getconf _NPROCESSORS_ONLN`
 )
 
-add_subdirectory(tools)
+#add_subdirectory(tools)
 
 

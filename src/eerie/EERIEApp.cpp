@@ -77,6 +77,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 using std::max;
 
+//TODO define
+#define CCS_LEFT 129
+
 //-----------------------------------------------------------------------------
 extern long USE_OLD_MOUSE_SYSTEM;
 extern long FINAL_RELEASE;

@@ -6853,8 +6853,8 @@ void CMenuButton::SetPos(int _iX,int _iY)
 	if (pTex)
 	{
 
-		iWidth  = max ( ARX_CAST_UINT( iWidth ), pTex->m_dwWidth );
-		iHeight = max ( ARX_CAST_UINT( iHeight ), pTex->m_dwHeight );
+		iWidth  = max ( ARX_CAST_UINT( iWidth ), (unsigned) pTex->m_dwWidth );
+		iHeight = max ( ARX_CAST_UINT( iHeight ), (unsigned) pTex->m_dwHeight );
 
 		float fRatioX = RATIO_X(iWidth);
 		float fRatioY = RATIO_Y(iHeight);
@@ -6872,8 +6872,8 @@ void CMenuButton::SetPos(int _iX,int _iY)
 
 	if (pTexOver)
 	{
-		iWidth2  = max ( ARX_CAST_UINT( iWidth2 ), pTexOver->m_dwWidth );
-		iHeight2 = max ( ARX_CAST_UINT( iHeight2 ), pTexOver->m_dwHeight );
+		iWidth2  = max ( ARX_CAST_UINT( iWidth2 ), (unsigned) pTexOver->m_dwWidth );
+		iHeight2 = max ( ARX_CAST_UINT( iHeight2 ), (unsigned) pTexOver->m_dwHeight );
 
 		float fRatioX = RATIO_X(iWidth2) ;
 		float fRatioY = RATIO_Y(iHeight2);

@@ -61,6 +61,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 #include "Danae.h"
 #include "DanaeDlg.h"
 #include "Danae_resource.h"

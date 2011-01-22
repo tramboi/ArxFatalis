@@ -26,8 +26,22 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define __ATHENA_CODEC_ADPCM_H__
 
 #include <stdio.h>
+#include <mmreg.h>
 #include <Athena_Types.h>
 #include "Athena_Codec.h"
+
+//todo hack for mingw
+typedef struct adpcmcoef_tag {
+	short   iCoef1;
+	short   iCoef2;
+} ADPCMCOEFSET;
+typedef struct adpcmwaveformat_tag {
+	WAVEFORMATEX    wfx;
+	WORD            wSamplesPerBlock;
+	WORD            wNumCoef;
+	/* FIXME: this should be aCoef[0] */
+	ADPCMCOEFSET    aCoef[1];
+} ADPCMWAVEFORMAT;
 
 namespace ATHENA
 {

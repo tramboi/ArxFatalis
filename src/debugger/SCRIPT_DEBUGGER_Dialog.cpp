@@ -45,10 +45,13 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //		interface
 
 //-----------------------------------------------------------------------------
-
-#include "SCRIPT_DEBUGGER_Dialog.h"
+#include <windows.h>
+#define _WIN32_IE 0x400
 #include <commctrl.h>
 #include <stdio.h>
+#include "SCRIPT_DEBUGGER_Dialog.h"
+
+using std::va_list;
 
 HINSTANCE ghInstance;
 HWND ghDialog;
