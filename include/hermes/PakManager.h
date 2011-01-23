@@ -50,7 +50,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //
 // Updates: (date) (person) (update)
 //
-// Code: S�bastien Scieux
+// Code: Sébastien Scieux
 //
 // Copyright (c) 1999 ARKANE Studios SA. All rights reserved
 //////////////////////////////////////////////////////////////////////////////////////
@@ -58,63 +58,52 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #ifndef ARX_HERMES_PAKMANAGER_H
 #define ARX_HERMES_PAKMANAGER_H
 
+#include <stddef.h>
 #include <vector>
 
 class PakFileHandle;
 class PakReader;
 class PakDirectory;
 
-#include <cstdio>
+void * PAK_FileLoadMalloc(const char * name, size_t * sizeLoaded = NULL);
+void * PAK_FileLoadMallocZero(const char * name, size_t * sizeLoaded = NULL);
 
-extern char PAK_WORKDIR[256];
-extern unsigned long g_pak_workdir_len;
+bool PAK_AddPak(const char * pakfile);
 
-
-#define LOAD_TRUEFILE			1
-#define LOAD_PACK				2
-#define LOAD_PACK_THEN_TRUEFILE	3
-#define LOAD_TRUEFILE_THEN_PACK	4
-
-extern long CURRENT_LOADMODE;
-void * PAK_FileLoadMalloc(char *name,long * SizeLoadMalloc=NULL);
-void * PAK_FileLoadMallocZero(char *name,long * SizeLoadMalloc=NULL);
-
-// use only for READ !!!!
-void PAK_SetLoadMode(long mode,char * pakfile,char * workdir=NULL);
-FILE * PAK_fopen(const char *filename, const char *mode );
-std::size_t PAK_fread(void *buffer, std::size_t size, std::size_t count, FILE *stream );;
-int PAK_fclose(FILE * stream);
-long PAK_ftell(FILE * stream);
-long PAK_DirectoryExist(char *name);
-long PAK_FileExist(char *name);
-int PAK_fseek(FILE * fic,long offset,int origin);
-
-void PAK_NotFoundInit(char * fic);
-bool PAK_NotFound(char * fic);
+PakFileHandle * PAK_fopen(const char * filename);
+size_t PAK_fread(void * buffer, size_t size, size_t count, PakFileHandle * stream);
+int PAK_fclose(PakFileHandle * stream);
+long PAK_ftell(PakFileHandle * stream);
+bool PAK_DirectoryExist(const char * name);
+bool PAK_FileExist(const char * name);
+int PAK_fseek(PakFileHandle * fic, int offset, long origin);
 
 void PAK_Close();
 
-//-----------------------------------------------------------------------------
-class PakManager
-{
+class PakManager {
+	
+private:
+	
+	std::vector<PakReader*> loadedPaks;
+	
 public:
-	std::vector<PakReader*> vLoadPak;
-public:
+	
 	PakManager();
 	~PakManager();
 
-	bool AddPak(char *);
-	bool RemovePak(char *);
-	bool Read(char *,void *);
-	void* ReadAlloc(char *,int *);
-	int GetSize(char *);
-	PakFileHandle * fOpen(char *);
-	int fClose(PakFileHandle *);
-	int fRead(void *, int, int, PakFileHandle *);
-	int fSeek(PakFileHandle *,int,int);
-	int fTell(PakFileHandle *);
-	std::vector<PakDirectory*> * ExistDirectory(char *_lpszName);
-	bool ExistFile(char *_lpszName);
+	bool AddPak(const char * pakname);
+	bool RemovePak(const char * pakname);
+	bool Read(const char * filename, void * buffer);
+	void * ReadAlloc(const char * filenme, size_t * sizeRead);
+	size_t GetSize(const char * filename);
+	PakFileHandle * fOpen(const char * filename);
+	int fClose(PakFileHandle * fh);
+	size_t fRead(void * buffer, size_t size, size_t count, PakFileHandle * fh);
+	int fSeek(PakFileHandle * fh, int offset, long whence);
+	int fTell(PakFileHandle * fh);
+	std::vector<PakDirectory*> * ExistDirectory(const char * name);
+	bool ExistFile(const char * name);
+	
 };
 
 #endif // ARX_HERMES_PAKMANAGER_H

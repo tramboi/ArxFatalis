@@ -65,6 +65,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include <time.h>
 #include "HERMESMain.h"
 #include "HERMESNet.h"
+#include <hermes/Filesystem.h>
 
 extern "C" {
 #undef __cplusplus
@@ -182,46 +183,6 @@ again:
 	strcpy(to, temp);
 }
 
-long KillAllDirectory(char * path) {
-	printf("KillAllDirectory(%s)\n", path);
-	
-	WIN32_FIND_DATA FileInformation;             // File information
-	
-	HANDLE idx;
-	WIN32_FIND_DATA fl;
-	char pathh[512];
-	sprintf(pathh, "%s*.*", path);
-	
-	if ((idx = FindFirstFile(pathh, &fl)) != INVALID_HANDLE_VALUE)
-	{
-		do
-		{
-			printf(" - \"%s\"\n", fl.cFileName);
-			if (fl.cFileName[0] != '.')
-			{
-				if (fl.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				{
-					sprintf(pathh, "%s%s\\", path, fl.cFileName);
-					KillAllDirectory(pathh);
-					RemoveDirectory(pathh);
-				}
-				else
-				{
-					sprintf(pathh, "%s%s", path, fl.cFileName);
-					DeleteFile(pathh);
-				}
-			}
-
-		}
-		while(FindNextFile(idx, &fl));
-
-		FindClose(idx);
-	}
-
-	RemoveDirectory(path);
-	return 1;
-}
-
 void GetDate(HERMES_DATE_TIME * hdt)
 {
 	struct tm * newtime;
@@ -272,17 +233,6 @@ void MakeUpcase(char * str)
 		}
 		str++;
 	}*/
-}
-
-void MakeUpcase_real(char * str)
-{
-	while(*str != '\0') {
-		// islower is needed as the are read-only strings passed that are already in upper case?
-		if(islower(*str)) {
-			*str = toupper(*str);
-		}
-		str++;
-	}
 }
 
 HKEY    ConsoleKey = NULL;
@@ -867,31 +817,6 @@ void RemoveName(char * str)
 	makepath(str, _drv, _dir, NULL, NULL);
 }
 
-long DirectoryExist(char * name)
-{
-	HANDLE idx;
-	WIN32_FIND_DATA fd;
-
-	if ((idx = FindFirstFile(name, &fd)) == -1)
-	{
-		FindClose(idx);
-		char initial[256];
-		GetCurrentDirectory(255, initial);
-
-		if (SetCurrentDirectory(name) == 0) // success
-		{
-			SetCurrentDirectory(initial);
-			return 1;
-		}
-
-		SetCurrentDirectory(initial);
-		return 0;
-	}
-
-	FindClose(idx);
-	return 1;
-}
-
 bool CreateFullPath(const char * path) {
 	printf("CreateFullPath(%s)", path);
 	
@@ -931,106 +856,6 @@ bool CreateFullPath(const char * path) {
 	return false;
 }
 
-
-bool GetWorkingDirectory(char * dest)
-{
-	char text[256];
-
-	if(!getcwd(text, sizeof(text) / sizeof(char))) {
-		return false;
-	}
-
-	long len=strlen(text);
-
-	if (text[len]!=PATH_SEPERATOR_CHR) strcat(text,PATH_SEPERATOR_STR);
-
-	strcpy(dest,text);
-	printf("GetWorkingDirectory() -> %s\n", dest);
-	return true;
-}
-
-long FileExist(char * name)
-{
-	long i;
-
-	if((i = FileOpenRead(name)) == 0) {
-		printf("\e[1;31mDidn't find\e[m\t%s\n", name);
-		return 0;
-	}
-	
-	FileCloseRead(i);
-	printf("\e[1;32mFound\e[m\t%s\n", name);
-	return 1;
-}
-
-long	FileOpenRead(char * name)
-{
-	long	handle;
-	handle = CreateFile((const char *)name, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
-
-	if(handle < 0) {
-		printf("\e[1;31mCan't open\e[m\t%s\n", name);
-		return(0);
-	}
-	printf("\e[1;32mOpened\e[m\t%s\n", name);
-	return(handle + 1);
-}
-
-long	FileSizeHandle(long handle)
-{
-	
-	return (SetFilePointer((int)handle - 1, 0, NULL, FILE_CURRENT));
-}
-
-long	FileOpenWrite(char * name)
-{
-	printf("FileOpenWrite(%s)\n", name);
-	int	handle;
-
-	handle = CreateFile((const char *)name, GENERIC_READ | GENERIC_WRITE, TRUNCATE_EXISTING, NULL, 0, 0, 0);
-
-	if (handle < 0)	{
-		return(0);
-	}
-
-	CloseHandle(handle);
-	handle = CreateFile((const char *)name, GENERIC_WRITE, 0, NULL, 0, 0, 0);
-
-	if (handle < 0) {
-		return(0);
-	}
-
-	return(handle + 1);
-}
-long	FileCloseRead(long handle)
-{
-	return(CloseHandle((int)handle - 1));
-}
-
-long	FileCloseWrite(long handle)
-{
-	//_commit((int)handle - 1);
-	return(CloseHandle((int)handle - 1));
-}
-
-long	FileRead(long handle, void * adr, long size)
-{
-	DWORD ret;
-	ReadFile(handle - 1, adr, size, &ret, NULL);
-	return ret;
-}
-
-long	FileWrite(long handle, void * adr, long size)
-{
-	DWORD ret;
-	WriteFile(handle - 1, adr, size, &ret, NULL);
-	return ret;
-}
-long	FileSeek(long handle, long offset, long mode)
-{
-	return SetFilePointer((int)handle - 1, offset, NULL, mode);
-}
-
 void ExitApp(int v)
 {
 	if (MAIN_PROGRAM_HANDLE != NULL)
@@ -1039,190 +864,6 @@ void ExitApp(int v)
 	exit(v);
 }
 
-// Finishes by a 0 (for text)
-void	* FileLoadMallocZero(char * name, long * SizeLoadMalloc)
-{
-	long	handle;
-	long	size1, size2;
-	unsigned char	* adr;
-
-retry:
-	;
-	handle = FileOpenRead(name);
-
-	if (!handle)
-	{
-		char str[256];
-		strcpy(str, name);
-		int mb;
-		mb = ShowError("FileLoadMalloc", str, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				goto  retry;
-				break;
-			case IDIGNORE:
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-
-				return(NULL);
-				break;
-		}
-	}
-
-	FileSeek(handle, 0, FILE_SEEK_END);
-	size1 = FileSizeHandle(handle) + 2;
-	adr = (unsigned char *)malloc(size1);
-
-	if (!adr)
-	{
-		int mb;
-		mb = ShowError("FileLoadMalloc", name, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				FileCloseRead(handle);
-				goto  retry;
-				break;
-			case IDIGNORE:
-				FileCloseRead(handle);
-
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-
-				return(0);
-				break;
-		}
-	}
-
-	FileSeek(handle, 0, FILE_SEEK_START);
-	size2 = FileRead(handle, adr, size1 - 2);
-	FileCloseRead(handle);
-
-	if (size1 != size2 + 2)
-	{
-		free(adr);
-		int mb;
-		mb = ShowError("FileLoadMalloc", name, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				goto  retry;
-				break;
-			case IDIGNORE:
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-
-				return(0);
-				break;
-		}
-	}
-
-	if (SizeLoadMalloc != NULL) *SizeLoadMalloc = size1;
-
-	adr[size1-1] = 0;
-	adr[size1-2] = 0;
-	return(adr);
-}
-void	* FileLoadMalloc(char * name, long * SizeLoadMalloc)
-{
-	long	handle;
-	long	size1, size2;
-	unsigned char	* adr;
-
-retry:
-	handle = FileOpenRead(name);
-
-	if (!handle)
-	{
-		char str[256];
-		strcpy(str, name);
-		int mb;
-		mb = ShowError("FileLoadMalloc", str, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				goto  retry;
-				break;
-			case IDIGNORE:
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-				return(NULL);
-				break;
-		}
-
-	}
-
-	FileSeek(handle, 0, FILE_SEEK_END);
-	size1 = FileSizeHandle(handle);
-	adr = (unsigned char *)malloc(size1);
-
-	if (!adr)
-	{
-		int mb;
-		mb = ShowError("FileLoadMalloc", name, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				FileCloseRead(handle);
-				goto  retry;
-				break;
-			case IDIGNORE:
-				FileCloseRead(handle);
-
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-
-				return(0);
-				break;
-		}
-	}
-
-	FileSeek(handle, 0, FILE_SEEK_START);
-	size2 = FileRead(handle, adr, size1);
-	FileCloseRead(handle);
-
-	if (size1 != size2)
-	{
-		free(adr);
-		int mb;
-		mb = ShowError("FileLoadMalloc", name, 4);
-
-		switch (mb)
-		{
-			case IDABORT:
-				ExitApp(1);
-				break;
-			case IDRETRY:
-				goto  retry;
-				break;
-			case IDIGNORE:
-				if (SizeLoadMalloc != NULL) *SizeLoadMalloc = 0;
-				return(0);
-				break;
-		}
-
-	}
-
-	if (SizeLoadMalloc != NULL) *SizeLoadMalloc = size1;
-
-	return(adr);
-}
 //******************************************************************************
 // OPEN/SAVE FILES DIALOGS
 //******************************************************************************
@@ -1384,7 +1025,7 @@ int WriteUnCompressedNoAlloc(void * Param, unsigned char * buf, size_t len) {
 }
 
 
-char * STD_Explode(char * from, long from_size, long * to_size)
+char * STD_Explode(char * from, size_t from_size, size_t * to_size)
 {
 
 	PARAM Param;
@@ -1407,7 +1048,7 @@ char * STD_Explode(char * from, long from_size, long * to_size)
 	return Param.pDestination;
 }
 
-void STD_ExplodeNoAlloc(char * from, long from_size, char * to, long * to_size)
+void STD_ExplodeNoAlloc(char * from, size_t from_size, char * to, size_t * to_size)
 {
 
 	PARAM Param;

@@ -82,6 +82,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #include <HERMESMain.h>
 #include <hermes/PakManager.h>
+#include <hermes/Filesystem.h>
 
 #include <EERIEMath.h>
 #include <EERIEObject.h>
@@ -198,14 +199,14 @@ extern char LOCAL_SAVENAME[64];
  
 void ARX_GAMESAVE_MakePath()
 {
-	sprintf(GameSavePath, "%sSave%s\\", Project.workingdir, LOCAL_SAVENAME);
+	sprintf(GameSavePath, "Save%s\\", LOCAL_SAVENAME);
 
 	if (!DirectoryExist(GameSavePath))
 	{
 		CreateDirectory(GameSavePath, NULL);
 	}
 
-	sprintf(GameSavePath, "%sSave%s\\Save%04d\\", Project.workingdir, LOCAL_SAVENAME, CURRENT_GAME_INSTANCE);
+	sprintf(GameSavePath, "Save%s\\Save%04d\\", LOCAL_SAVENAME, CURRENT_GAME_INSTANCE);
 
 	if (!DirectoryExist(GameSavePath))
 	{
@@ -218,7 +219,7 @@ void ARX_GAMESAVE_CreateNewInstance()
 	char basepath[256];
 	char testpath[256];
 	long num = 1;
-	sprintf(basepath, "%sSave%s\\", Project.workingdir, LOCAL_SAVENAME);
+	sprintf(basepath, "Save%s\\", LOCAL_SAVENAME);
 
 	while (1)
 	{
@@ -233,7 +234,7 @@ void ARX_GAMESAVE_CreateNewInstance()
 		}
 		else
 		{
-			//le directory peut exister mais peut �tre vide apr�s un crash
+			//The directory may exist but may be empty after crash
 			strcat(testpath, "\\GSAVE.SAV");
 			FILE * f = fopen(testpath, "rb");
 
@@ -312,14 +313,14 @@ long GetIOAnimIdx2(INTERACTIVE_OBJ * io, ANIM_HANDLE * anim)
 //--------------------------------------------------------------------------------------------
 void ARX_CHANGELEVEL_MakePath()
 {
-	sprintf(CurGamePath, "%sSave%s\\", Project.workingdir, LOCAL_SAVENAME);
+	sprintf(CurGamePath, "Save%s\\", LOCAL_SAVENAME);
 
 	if (!DirectoryExist(CurGamePath))
 	{
 		CreateDirectory(CurGamePath, NULL);
 	}
 
-	sprintf(CurGamePath, "%sSave%s\\Cur%04d\\", Project.workingdir, LOCAL_SAVENAME, LAST_CHINSTANCE);
+	sprintf(CurGamePath, "Save%s\\Cur%04d\\", LOCAL_SAVENAME, LAST_CHINSTANCE);
 
 	if (!DirectoryExist(CurGamePath))
 		CreateDirectory(CurGamePath, NULL);
@@ -330,7 +331,7 @@ void ARX_CHANGELEVEL_CreateNewInstance()
 	char basepath[256];
 	char testpath[256];
 	long num = 1;
-	sprintf(basepath, "%sSave%s\\", Project.workingdir, LOCAL_SAVENAME);
+	sprintf(basepath, "Save%s\\", LOCAL_SAVENAME);
 
 	while (1)
 	{
@@ -784,7 +785,7 @@ retry:
 		{
 			case TYPE_G_TEXT:
 
-				if ((svar[i].name[0] == '$') || (svar[i].name[0] == '�'))
+				if ((svar[i].name[0] == '$') || (svar[i].name[0] == '\xA3'))
 				{
 					strcpy(avs.name, svar[i].name);
 
@@ -809,7 +810,7 @@ retry:
 				break;
 			case TYPE_G_LONG:
 
-				if ((svar[i].name[0] == '#') || (svar[i].name[0] == '�'))
+				if ((svar[i].name[0] == '#') || (svar[i].name[0] == '\xA7'))
 				{
 					strcpy(avs.name, svar[i].name);
 					avs.fval = (float)svar[i].ival;
@@ -1044,7 +1045,7 @@ retry:
 
 		if (inter.iobj[0]->anims[i] != NULL)
 		{
-			strcpy(asp->anims[i], inter.iobj[0]->anims[i]->path + strlen(Project.workingdir));
+			strcpy(asp->anims[i], inter.iobj[0]->anims[i]->path);
 		}
 	}
 
@@ -1340,7 +1341,7 @@ long ARX_CHANGELEVEL_Push_IO(INTERACTIVE_OBJ * io)
 
 		if (io->anims[i] != NULL)
 		{
-			strcpy(ais.anims[i], io->anims[i]->path + strlen(Project.workingdir));
+			strcpy(ais.anims[i], io->anims[i]->path);
 		}
 	}
 
@@ -1508,7 +1509,7 @@ long ARX_CHANGELEVEL_Push_IO(INTERACTIVE_OBJ * io)
 		{
 			case TYPE_L_TEXT:
 
-				if ((io->script.lvar[i].name[0] == '$') || (io->script.lvar[i].name[0] == '�'))
+				if ((io->script.lvar[i].name[0] == '$') || (io->script.lvar[i].name[0] == '\xA3'))
 				{
 					strcpy(avs->name, io->script.lvar[i].name);
 
@@ -1541,7 +1542,7 @@ long ARX_CHANGELEVEL_Push_IO(INTERACTIVE_OBJ * io)
 				break;
 			case TYPE_L_LONG:
 
-				if ((io->script.lvar[i].name[0] == '#') || (io->script.lvar[i].name[0] == '�'))
+				if ((io->script.lvar[i].name[0] == '#') || (io->script.lvar[i].name[0] == '\xA7'))
 				{
 					strcpy(avs->name, io->script.lvar[i].name);
 					avs->fval = (float)io->script.lvar[i].ival;
@@ -1588,7 +1589,7 @@ long ARX_CHANGELEVEL_Push_IO(INTERACTIVE_OBJ * io)
 		{
 			case TYPE_L_TEXT:
 
-				if ((io->script.lvar[i].name[0] == '$') || (io->script.lvar[i].name[0] == '�'))
+				if ((io->script.lvar[i].name[0] == '$') || (io->script.lvar[i].name[0] == '\xA3'))
 				{
 					strcpy(avs->name, io->over_script.lvar[i].name);
 
@@ -1620,7 +1621,7 @@ long ARX_CHANGELEVEL_Push_IO(INTERACTIVE_OBJ * io)
 				break;
 			case TYPE_L_LONG:
 
-				if ((io->script.lvar[i].name[0] == '#') || (io->script.lvar[i].name[0] == '�'))
+				if ((io->script.lvar[i].name[0] == '#') || (io->script.lvar[i].name[0] == '\xA7'))
 				{
 					strcpy(avs->name, io->over_script.lvar[i].name);
 					avs->fval	= (float)io->over_script.lvar[i].ival;
@@ -1868,7 +1869,7 @@ long ARX_CHANGELEVEL_Pop_Index(ARX_CHANGELEVEL_INDEX * asi, long num)
 	char _error[256];
 	
 	sprintf(loadfile, "lvl%03d.sav", num);
-	long size;
+	size_t size;
 	size = _pSaveBlock->GetSize(loadfile);
 
 	if (size <= 0)
@@ -1932,7 +1933,7 @@ long ARX_CHANGELEVEL_Pop_Zones_n_Lights(ARX_CHANGELEVEL_INDEX * asi, long num)
 	long pos = 0;
 	char loadfile[256];
 	char _error[256];
-	long size;
+	size_t size;
 
 	sprintf(loadfile, "lvl%03d.sav", num);
 	size = _pSaveBlock->GetSize(loadfile);
@@ -2042,7 +2043,7 @@ long ARX_CHANGELEVEL_Pop_Level(ARX_CHANGELEVEL_INDEX * asi, long num, long First
 	LOAD_N_DONT_ERASE = 1;
 
 	sprintf(tex, "LEVEL%s", lev);
-	sprintf(ftemp, "%sGraph\\Levels\\%s\\%s.DLF", Project.workingdir, tex, tex);
+	sprintf(ftemp, "Graph\\Levels\\%s\\%s.DLF", tex, tex);
 
 	if (!PAK_FileExist(ftemp))
 	{
@@ -2112,7 +2113,7 @@ long ARX_CHANGELEVEL_Pop_Player(ARX_CHANGELEVEL_INDEX * asi, ARX_CHANGELEVEL_PLA
 	char _error[256];
 
 	sprintf(loadfile, "player.sav");
-	long size = _pSaveBlock->GetSize(loadfile);
+	size_t size = _pSaveBlock->GetSize(loadfile);
 
 	if (size <= 0)
 	{
@@ -2311,9 +2312,7 @@ long ARX_CHANGELEVEL_Pop_Player(ARX_CHANGELEVEL_INDEX * asi, ARX_CHANGELEVEL_PLA
 
 		if (asp->anims[i][0])
 		{
-			char tex[256];
-			sprintf(tex, "%s%s", Project.workingdir, asp->anims[i]);
-			io->anims[i] = EERIE_ANIMMANAGER_Load(tex);
+			io->anims[i] = EERIE_ANIMMANAGER_Load(asp->anims[i]);
 		}
 	}
 
@@ -2383,7 +2382,7 @@ long ARX_CHANGELEVEL_Pop_IO(char * ident)
 	ARX_CHANGELEVEL_IO_SAVE * ais;
 	unsigned char * dat;
 	long pos = 0;
-	long size = 0;
+	size_t size = 0;
 
 	sprintf(loadfile, "%s.sav", ident);
 
@@ -2649,20 +2648,19 @@ long ARX_CHANGELEVEL_Pop_IO(char * ident)
 			{
 				char tex[256];
 
-				if ((strlen(Project.workingdir) + strlen(ais->anims[i])) > 256)
+				if (strlen(ais->anims[i]) > 256)
 				{
 					continue;
 				}
 
-				sprintf(tex, "%s%s", Project.workingdir, ais->anims[i]);
-				io->anims[i] = EERIE_ANIMMANAGER_Load(tex);
+				io->anims[i] = EERIE_ANIMMANAGER_Load(ais->anims[i]);
 
 				if (io->anims[i] == NULL)
 				{
 					if (io->ioflags & IO_NPC)
-						sprintf(tex, "%sGRAPH\\OBJ3D\\ANIMS\\NPC\\%s%s", Project.workingdir, GetName(ais->anims[i]), GetExt(ais->anims[i]));
+						sprintf(tex, "GRAPH\\OBJ3D\\ANIMS\\NPC\\%s%s", GetName(ais->anims[i]), GetExt(ais->anims[i]));
 					else
-						sprintf(tex, "%sGRAPH\\OBJ3D\\ANIMS\\FIX_Inter\\%s%s", Project.workingdir, GetName(ais->anims[i]), GetExt(ais->anims[i]));
+						sprintf(tex, "GRAPH\\OBJ3D\\ANIMS\\FIX_Inter\\%s%s", GetName(ais->anims[i]), GetExt(ais->anims[i]));
 
 					io->anims[i] = EERIE_ANIMMANAGER_Load(tex);
 				}
@@ -2795,7 +2793,7 @@ long ARX_CHANGELEVEL_Pop_IO(char * ident)
 						pos += io->script.lvar[i].ival;
 						io->script.lvar[i].ival = strlen(io->script.lvar[i].text) + 1;
 
-						if (io->script.lvar[i].text[0] == '�')
+						if (io->script.lvar[i].text[0] == '\xCC')
 							io->script.lvar[i].text[0] = 0;
 					}
 					else
@@ -2821,13 +2819,13 @@ long ARX_CHANGELEVEL_Pop_IO(char * ident)
 					break;
 				default:
 
-					if ((avs->name[0] == '$') || (avs->name[0] == '�'))
+					if ((avs->name[0] == '$') || (avs->name[0] == '\xA3'))
 					{
 						avs->type = TYPE_L_TEXT;
 						goto retry;
 					}
 
-					if ((avs->name[0] == '#') || (avs->name[0] == '�'))
+					if ((avs->name[0] == '#') || (avs->name[0] == '\xA7'))
 					{
 						avs->type = TYPE_L_LONG;
 						goto retry;
@@ -2930,7 +2928,7 @@ long ARX_CHANGELEVEL_Pop_IO(char * ident)
 					break;
 				default:
 
-					if ((avs->name[0] == '$') || (avs->name[0] == '�'))
+					if ((avs->name[0] == '$') || (avs->name[0] == '\xA3'))
 					{
 						avs->type = TYPE_L_TEXT;
 						goto retry2;
@@ -3470,7 +3468,7 @@ long ARX_CHANGELEVEL_Pop_Globals()
 	unsigned char * dat;
 	long pos = 0;
 	char loadfile[256];
-	long size;
+	size_t size;
 	char _error[256];
 
 	ARX_SCRIPT_Free_All_Global_Variables();
@@ -3554,7 +3552,7 @@ long ARX_CHANGELEVEL_Pop_Globals()
 
 					memcpy(svar[i].text, dat + pos + sizeof(ARX_CHANGELEVEL_VARIABLE_SAVE), svar[i].ival);
 
-					if (svar[i].text[0] == '�')
+					if (svar[i].text[0] == '\xCC')
 						svar[i].text[0] = 0;
 				}
 				else
@@ -4002,8 +4000,8 @@ long ARX_CHANGELEVEL_PopLevel(long instance, long reloadflag)
 
 
 //-----------------------------------------------------------------------------
-// copie un rep (r�cursif sous reps) dans un autre en cr�ant les reps
-// �crase les fichiers pour les mettre � jour
+// copy a dir (recursive sub reps) in another, creating reps
+// overwrites files for update
 void CopyDirectory(char * _lpszSrc, char * _lpszDest)
 {
 	CreateDirectory(_lpszDest, NULL);
@@ -4119,9 +4117,8 @@ long ARX_CHANGELEVEL_Save(long instance, char * name)
 	CopyDirectory(CurGamePath, GameSavePath);
 
 	//on copie le fichier temporaire bmp dans le repertoire
-	char tcSrc[256];
+	const char tcSrc[] = "SCT_0.BMP";
 	char tcDst[256];
-	sprintf(tcSrc, "%sSCT_0.BMP", Project.workingdir);
 	sprintf(tcDst, "%sGSAVE.BMP", GameSavePath);
 	CopyFile(tcSrc, tcDst, false);
 	DeleteFile(tcSrc);
@@ -4188,7 +4185,7 @@ long ARX_CHANGELEVEL_Get_Player_LevelData(ARX_CHANGELEVEL_PLAYER_LEVEL_DATA * pl
 
 	char loadfile[256];
 	char _error[256];
-	long size;
+	size_t size;
 	unsigned char * dat;
 
 	// Open Save Block

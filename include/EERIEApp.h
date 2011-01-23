@@ -50,7 +50,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 // Updates: (date) (person) (update)
 //
 // Code:	Cyril Meynier
-//			S�bastien Scieux	(Zbuffer)
+//			Sébastien Scieux	(Zbuffer)
 //
 // Copyright (c) 1999 ARKANE Studios SA. All rights reserved
 //////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,6 @@ typedef struct
 	EERIE_RGBB	torch;
 	long		interpolatemouse;
 	long		vsync;
-	char		workingdir[256];
 	char		localisationpath[256];
 } PROJECT;
 
@@ -328,7 +327,7 @@ protected:
 		VOID					Cleanup3DEnvironment();
 		LPDIRECT3D7				m_pD3D;
 		void					EvictManagedTextures();
-		HRESULT Render();
+		virtual HRESULT Render() = 0;
 		virtual HRESULT InitDeviceObjects()
 		{
 			return S_OK;
@@ -404,7 +403,6 @@ void	ShowPopup(char * text);
 int		ShowError(char * funcname, char * message, long fatality);
 
 void	ExitApp(int v);
-char*	MakeDir(char * tex, char * tex2);
 void	CalcFPS(bool reset = false);
 
 void	SetZBias(const LPDIRECT3DDEVICE7, int);

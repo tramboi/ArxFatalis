@@ -26,8 +26,9 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #define __ATHENA_CODEC_ADPCM_H__
 
 #include <stdio.h>
-#include <mmreg.h>
-#include <Athena_Types.h>
+#include <windows.h>
+#include <mmreg.h> // for ADPCMWAVEFORMAT
+#include "Athena_Types.h"
 #include "Athena_Codec.h"
 
 //todo hack for mingw
@@ -42,6 +43,8 @@ typedef struct adpcmwaveformat_tag {
 	/* FIXME: this should be aCoef[0] */
 	ADPCMCOEFSET    aCoef[1];
 } ADPCMWAVEFORMAT;
+
+class PakFileHandle;
 
 namespace ATHENA
 {
@@ -59,11 +62,11 @@ namespace ATHENA
 			~CodecADPCM();
 			// Setup                                                                     //
 			aalError SetHeader(aalVoid * header);
-			aalError SetStream(FILE * stream);
+			aalError SetStream(PakFileHandle * stream);
 			aalError SetPosition(const aalULong & position);
 			// Status                                                                    //
 			aalError GetHeader(aalVoid *&header);
-			aalError GetStream(FILE *&stream);
+			aalError GetStream(PakFileHandle *&stream);
 			aalError GetPosition(aalULong & position);
 			// File I/O                                                                  //
 			aalError Read(aalVoid * buffer, const aalULong & to_read, aalULong & read);
@@ -73,7 +76,7 @@ namespace ATHENA
 			aalVoid GetSample(const aalULong & channel_i, aalSByte nybble);
 			aalError GetNextBlock();
 			// Data                                                                      //
-			FILE * stream;
+			PakFileHandle * stream;
 			ADPCMWAVEFORMAT * header;
 			aalULong padding;
 			aalULong shift;

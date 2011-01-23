@@ -22,24 +22,35 @@ If you have questions concerning this license or the applicable additional terms
 ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
-#ifndef __ATHENA_FILE_H__
-#define __ATHENA_FILE_H__
 
-#include <stdio.h>
-#include <Athena_Types.h>
 
-namespace ATHENA
-{
+#ifndef ARX_HERMES_FILESYSTEM_H
+#define ARX_HERMES_FILESYSTEM_H
 
-	extern FILE *(* FileOpen)(const char * name, const char * mode);
-	extern int (* FileClose)(FILE * file);
-	extern size_t (* FileRead)(void * buffer, size_t size, size_t count, FILE * file);
-	extern int (* FileSeek)(FILE * file, long offset, int origin);
-	extern long(* FileTell)(FILE * file);
+#include <stddef.h>
 
-	aalVoid FileIOInit();
-	aalVoid AddPack(const char * name);
+#define PATH_SEPERATOR_STR "/"
+#define PATH_SEPERATOR_CHR '/'
 
-}//ATHENA::
+#define	FILE_SEEK_START 0
+#define	FILE_SEEK_CURRENT 1
+#define	FILE_SEEK_END 2
 
-#endif//__ATHENA_FILE_H__
+typedef long FileHandle;
+
+long KillAllDirectory(const char * path);
+
+bool FileExist(const char * name);
+bool DirectoryExist(const char * name);
+FileHandle FileOpenRead(const char * name);
+FileHandle FileOpenWrite(const char * name);
+long FileCloseWrite(FileHandle h);
+long FileCloseRead(FileHandle h);
+long FileRead(FileHandle h, void * adr, long size);
+long FileWrite(FileHandle h, const void * adr, long size);
+void * FileLoadMalloc(const char * name, size_t * sizeLoaded = 0);
+void * FileLoadMallocZero(const char * name, size_t * sizeLoaded = 0);
+long FileSeek(FileHandle handle, int offset, long mode);
+long FileTell(FileHandle handle);
+
+#endif // ARX_HERMES_FILESYSTEM_H

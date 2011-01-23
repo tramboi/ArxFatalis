@@ -32,7 +32,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 /*----------------------------------------------------------------------*/
 void DrawInfoTrack(void);
 /*----------------------------------------------------------------------*/
-static FILE * FCurr;
+static PakFileHandle * FCurr;
 static char Dir[256];
 static char Name[256];
 /*----------------------------------------------------------------------*/
@@ -67,7 +67,7 @@ void ReadString(char * d)
 	}
 }
 /*----------------------------------------------------------------------*/
-bool LoadProject(CINEMATIQUE * c, char * dir, char * name)
+bool LoadProject(CINEMATIQUE * c, const char * dir, const char * name)
 {
 	int		nb, version;
 	C_TRACK	t;
@@ -86,7 +86,7 @@ bool LoadProject(CINEMATIQUE * c, char * dir, char * name)
 
 	strcpy(AllTxt, dir);
 	strcat(AllTxt, name);
-	FCurr = PAK_fopen(AllTxt, "rb");
+	FCurr = PAK_fopen(AllTxt);
 
 	if (!FCurr) return false;
 

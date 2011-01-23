@@ -45,6 +45,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include <hermes/PakManager.h>
 #include <hermes/PakReader.h>
 #include <hermes/PakEntry.h>
+#include <hermes/Filesystem.h>
 #include <EERIEMath.h>
 #include <ARX_NPC.h>
 #include <ARX_Interactive.h>
@@ -363,8 +364,7 @@ long ARX_SOUND_Init(HWND hwnd)
 		}
 	}
 
-	if (aalSetRootPath(Project.workingdir) ||
-	        aalSetSamplePath(ARX_SOUND_PATH_SAMPLE) ||
+	if (aalSetSamplePath(ARX_SOUND_PATH_SAMPLE) ||
 	        aalSetAmbiancePath(ARX_SOUND_PATH_AMBIANCE) ||
 	        aalSetEnvironmentPath(ARX_SOUND_PATH_ENVIRONMENT))
 	{
@@ -419,55 +419,35 @@ long ARX_SOUND_Init(HWND hwnd)
 	aalSetListenerUnitFactor(ARX_SOUND_UNIT_FACTOR);
 	aalSetListenerRolloffFactor(ARX_SOUND_ROLLOFF_FACTOR);
 
-	if (FINAL_RELEASE)
-	{
-		char pakfile[256];
-
-		aalEnable(AAL_FLAG_PACKEDRESOURCES);
-
-		if (pStringModSfx[0])
-		{
-			sprintf(pakfile, "%s%s", Project.workingdir, pStringModSfx);
-
-			if (FileExist(pakfile)) aalAddResourcePack(pakfile);
+	if(FINAL_RELEASE) {
+		
+		if(pStringModSfx[0]) {
+			if(!PAK_AddPak(pStringModSfx)) {
+				printf("Unable to Find Mod SFX Data File\n");
+			}
 		}
-
-		if (pStringModSpeech[0])
-		{
-			sprintf(pakfile, "%s%s", Project.workingdir, pStringModSpeech);
-
-			if (FileExist(pakfile)) aalAddResourcePack(pakfile);
+		
+		if (pStringModSpeech[0]) {
+			if(!PAK_AddPak(pStringModSpeech)) {
+				printf("Unable to Find Mod Speech Data File\n");
+			}
 		}
-
-		sprintf(pakfile, "%ssfx.pak", Project.workingdir);
-
-		if (FileExist(pakfile)) aalAddResourcePack(pakfile);
-		else
-		{
-			MessageBox(NULL, "Unable to Find Data File\nPlease Reinstall ARX Fatalis", "ARX Fatalis - Error", MB_ICONEXCLAMATION | MB_OK);
+		
+		const char PAK_SFX[] = "sfx.pak";
+		if(!PAK_AddPak(PAK_SFX)) {
+			printf("Unable to Find SFX Data File\n");
 			exit(0);
 		}
-
-		sprintf(pakfile, "%sspeech.pak", Project.workingdir);
-
-		if (FileExist(pakfile))
-		{
-			aalAddResourcePack(pakfile);
-		}
-		else
-		{
-			sprintf(pakfile, "%sspeech_default.pak", Project.workingdir);
-
-			if (FileExist(pakfile))
-			{
-				aalAddResourcePack(pakfile);
-			}
-			else
-			{
-				MessageBox(NULL, "Unable to Find Data File\nPlease Reinstall ARX Fatalis", "ARX Fatalis - Error", MB_ICONEXCLAMATION | MB_OK);
+		
+		const char PAK_SPEECH[] = "speech.pak";
+		if(!PAK_AddPak(PAK_SPEECH)) {
+			const char PAK_SPEECH_DEFAULT[] = "speech_default.pak";
+			if(!PAK_AddPak(PAK_SPEECH_DEFAULT)) {
+				printf("Unable to Find Speech Data File\n");
 				exit(0);
 			}
 		}
+		
 	}
 
 	// Load samples
@@ -1405,26 +1385,25 @@ void ARX_SOUND_AmbianceRestorePlayList(void * _play_list, unsigned long size)
 	}
 }
 
-// P�B�M�J�M�A
+// PâBôMéJèMçA
 extern PakManager * pPakManager;
 static void ARX_SOUND_CreateEnvironments()
 {
 	if (FINAL_RELEASE)
 	{
 		vector<PakDirectory *> *pvDirectory = NULL;
-		char lpszPakPath[512] = "";
-
-		sprintf(lpszPakPath, "%ssfx.pak", Project.workingdir);
-
+		
+		const char PAK_SFX[] = "sfx.pak";
+		
 		if (!pPakManager) pPakManager = new PakManager;
 
-		if (!pPakManager->AddPak(lpszPakPath)) return;
+		if (!pPakManager->AddPak(PAK_SFX)) return;
 
 		pvDirectory = pPakManager->ExistDirectory((char *)ARX_SOUND_PATH_ENVIRONMENT);
 
 		if (!pvDirectory)
 		{
-			pPakManager->RemovePak(lpszPakPath);
+			pPakManager->RemovePak(PAK_SFX);
 			return;
 		}
 
@@ -1442,7 +1421,7 @@ static void ARX_SOUND_CreateEnvironments()
 			}
 		}
 
-		pPakManager->RemovePak(lpszPakPath);
+		pPakManager->RemovePak(PAK_SFX);
 		pvDirectory->clear();
 		delete pvDirectory;
 	}
@@ -1453,7 +1432,7 @@ static void ARX_SOUND_CreateEnvironments()
 //		_finddata_t fdata;
 //		long fhandle;
 //
-//		sprintf(path, "%ssfx\\environment\\*.aef", Project.workingdir);
+//		sprintf(path, "sfx\\environment\\*.aef");
 //
 //		if ((fhandle = _findfirst(path, &fdata)) != -1)
 //		{
@@ -2010,11 +1989,9 @@ static void ARX_SOUND_CreateCollisionMaps()
 	for (unsigned long i = 0; i < ARX_SOUND_COLLISION_MAP_COUNT; i++)
 	{
 		char * lpszFileText;
-		long lFileSize;
+		size_t lFileSize;
 
-		sprintf(path, "%s%s%s%s",
-		        Project.workingdir,
-		        ARX_SOUND_PATH_INI, ARX_SOUND_COLLISION_MAP_NAME[i], ARX_SOUND_FILE_EXTENSION_INI);
+		sprintf(path, "%s%s%s", ARX_SOUND_PATH_INI, ARX_SOUND_COLLISION_MAP_NAME[i], ARX_SOUND_FILE_EXTENSION_INI);
 
 		lpszFileText = (char *)PAK_FileLoadMallocZero(path, &lFileSize);
 
@@ -2182,11 +2159,9 @@ static void ARX_SOUND_CreatePresenceMap()
 {
 	char path[256];
 	char * lpszFileText;
-	long lFileSize;
+	size_t lFileSize;
 
-	sprintf(path, "%s%s%s%s",
-	        Project.workingdir,
-	        ARX_SOUND_PATH_INI, ARX_SOUND_PRESENCE_NAME, ARX_SOUND_FILE_EXTENSION_INI);
+	sprintf(path, "%s%s%s", ARX_SOUND_PATH_INI, ARX_SOUND_PRESENCE_NAME, ARX_SOUND_FILE_EXTENSION_INI);
 
 	lpszFileText = (char *)PAK_FileLoadMallocZero(path, &lFileSize);
 

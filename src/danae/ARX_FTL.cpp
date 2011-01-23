@@ -65,6 +65,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "HERMESMain.h"
 
 #include <hermes/PakManager.h>
+#include <hermes/Filesystem.h>
 
 //***********************************************************************************************
 //	FTL FILE Structure:
@@ -142,7 +143,7 @@ extern long NOCHECKSUM;
 //-----------------------------------------------------------------------------------------------
 // VERIFIED (Cyril 2001/10/15)
 //***********************************************************************************************
-bool ARX_FTL_Save(char * incomplete_fic, char * complete_fic, EERIE_3DOBJ * obj)
+bool ARX_FTL_Save(const char * file, EERIE_3DOBJ * obj)
 {
 	// Need an object to be saved !
 	if (obj == NULL) return false;
@@ -150,7 +151,7 @@ bool ARX_FTL_Save(char * incomplete_fic, char * complete_fic, EERIE_3DOBJ * obj)
 	// Generate File name/path and create it
 	char path[256];
 	char gamefic[256];
-	sprintf(gamefic, "%sGame%s", Project.workingdir, incomplete_fic);
+	sprintf(gamefic, "Game\\%s", file);
 	SetExt(gamefic, ".FTL");
 	strcpy(path, gamefic);
 	RemoveName(path);
@@ -236,8 +237,8 @@ bool ARX_FTL_Save(char * incomplete_fic, char * complete_fic, EERIE_3DOBJ * obj)
 
 	// Identification
 	char check[512];
-	MakeUpcase(complete_fic);
-	HERMES_CreateFileCheck(complete_fic, check, 512, CURRENT_FTL_VERSION);
+	MakeUpcase(file);
+	HERMES_CreateFileCheck(file, check, 512, CURRENT_FTL_VERSION);
 	memcpy(dat + pos, check, 512);
 	pos += 512;
 
@@ -476,7 +477,7 @@ typedef struct
 {
 	char * name;
 	char * data;
-	long size;
+	size_t size;
 } MCACHE_DATA;
 
 MCACHE_DATA * MCache = NULL;
@@ -514,7 +515,7 @@ long MCache_Get(char * file)
 //-----------------------------------------------------------------------------------------------
 // VERIFIED (Cyril 2001/10/15)
 //***********************************************************************************************
-bool MCache_Push(char * file, char * data, long size)
+bool MCache_Push(char * file, char * data, size_t size)
 {
 	char fic[256];
 
@@ -552,7 +553,7 @@ void MCache_ClearAll()
 //-----------------------------------------------------------------------------------------------
 // VERIFIED (Cyril 2001/10/15)
 //***********************************************************************************************
-char * MCache_Pop(char * file, long * size)
+char * MCache_Pop(char * file, size_t * size)
 {
 	long num = MCache_Get(file);
 
@@ -573,20 +574,26 @@ long BH_MODE = 0;
 //-----------------------------------------------------------------------------------------------
 // VERIFIED (Cyril 2001/10/15)
 //***********************************************************************************************
-EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DOBJ * obj)
+EERIE_3DOBJ * ARX_FTL_Load(const char * file)
 {
+	
+	printf("ARX_FTL_Load(%s)\n", file);
+	
 	// Creates FTL file name
-	char gamefic[256];
-	sprintf(gamefic, "%sGame%s", Project.workingdir, incomplete_fic);
-	SetExt(gamefic, ".FTL");
+	char filename[256];
+	sprintf(filename, "Game\\%s", file);
+	SetExt(filename, ".FTL");
 
 	// Checks for FTL file existence
-	if (!PAK_FileExist(gamefic)) return NULL;
+	if(!PAK_FileExist(filename)) {
+		printf("ARX_FTL_Load: not found in PAK\n");
+		return NULL;
+	}
 
 	// Our file exist we can use it
 	unsigned char * dat;
 	long pos = 0;
-	long allocsize;
+	size_t allocsize;
 
 	ARX_FTL_PRIMARY_HEADER 	*		afph;
 	ARX_FTL_SECONDARY_HEADER 	*		afsh;
@@ -595,31 +602,38 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	ARX_FTL_COLLISION_SPHERES_DATA_HEADER * afcsdh;
 	ARX_FTL_3D_DATA_HEADER 	*		af3Ddh;
 
-	char * compressed = NULL;
-	long cpr_pos = 0;
+	char * compressedData = NULL;
+	size_t compressedSize = 0;
 	long NOrelease = 1;
 	long NoCheck = 0;
 
-	compressed = MCache_Pop(gamefic, &cpr_pos);
+	compressedData = MCache_Pop(filename, &compressedSize);
 
-	if (!compressed)
+	if (!compressedData)
 	{
-		compressed = (char *)PAK_FileLoadMalloc(gamefic, &cpr_pos);
-		NOrelease = MCache_Push(gamefic, compressed, cpr_pos) ? 1 : 0;
+		compressedData = (char *)PAK_FileLoadMalloc(filename, &compressedSize);
+		NOrelease = MCache_Push(filename, compressedData, compressedSize) ? 1 : 0;
 	}
 	else NoCheck = 1;
 
-	if (!compressed) return NULL;
+	if(!compressedData) {
+		printf("ARX_FTL_Load: error loading from PAK\n");
+		return NULL;
+	}
 
 	long DontCheck = 0;
 
-	if (CURRENT_LOADMODE != LOAD_TRUEFILE) DontCheck = 1;
+	DontCheck = 1;
 
-	dat = (unsigned char *)STD_Explode(compressed, cpr_pos, &allocsize);//pos,&cpr_pos);
+	dat = (unsigned char *)STD_Explode(compressedData, compressedSize, &allocsize);//pos,&cpr_pos);
+	// TODO size ignored
 
-	if (!dat) return NULL;
+	if(!dat) {
+		printf("ARX_FTL_Load: error decompressing\n");
+		return NULL;
+	}
 
-	if (!NOrelease) free(compressed);
+	if (!NOrelease) free(compressedData);
 
 	// Pointer to Primary Header
 	afph = (ARX_FTL_PRIMARY_HEADER *)dat;
@@ -628,6 +642,7 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	// Verify FTL file Signature
 	if ((afph->ident[0] != 'F') && (afph->ident[1] != 'T') && (afph->ident[2] != 'L'))
 	{
+		printf("ARX_FTL_Load: wrong magic number\n");
 		free(dat);
 		return NULL;
 	}
@@ -635,6 +650,7 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	// Verify FTL file version
 	if (afph->version != CURRENT_FTL_VERSION)
 	{
+		printf("ARX_FTL_Load: wrong version: %f, expected %f\n", afph->version, CURRENT_FTL_VERSION);
 		free(dat);
 		return NULL;
 	}
@@ -644,14 +660,14 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	{
 		char check[512];
 
-		MakeUpcase(complete_fic);
-		HERMES_CreateFileCheck(complete_fic, check, 512, CURRENT_FTL_VERSION);
+		HERMES_CreateFileCheck(file, check, 512, CURRENT_FTL_VERSION);
 
 		char * pouet = (char *)(dat + pos);
 
 		for (long i = 0; i < 512; i++)
 			if (check[i] != pouet[i])
 			{
+				printf("ARX_FTL_Load: checksum error\n");
 				free(dat);
 				return NULL;
 			}
@@ -664,10 +680,11 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	afsh = (ARX_FTL_SECONDARY_HEADER *)(dat + pos);
 	pos += sizeof(ARX_FTL_SECONDARY_HEADER);
 
+	EERIE_3DOBJ * obj = NULL;
+	
 	// Check For & Load 3D Data
 	if (afsh->offset_3Ddata != -1)
 	{
-		if (obj) ReleaseEERIE3DObj(obj), obj = NULL;
 
 		//todo free
 		obj = (EERIE_3DOBJ *)malloc(sizeof(EERIE_3DOBJ));
@@ -754,11 +771,10 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 			for (long i = 0; i < af3Ddh->nb_maps; i++)
 			{
 				memcpy(ficc2, dat + pos, 256);
-				strcpy(ficc3, Project.workingdir);
-				strcat(ficc3, ficc2);
+				strcpy(ficc3, ficc2);
 				File_Standardize(ficc3, ficc);
 
-				obj->texturecontainer[i] = D3DTextr_CreateTextureFromFile(ficc, Project.workingdir, 0, 0, EERIETEXTUREFLAG_LOADSCENE_RELEASE);
+				obj->texturecontainer[i] = D3DTextr_CreateTextureFromFile(ficc, 0, 0, EERIETEXTUREFLAG_LOADSCENE_RELEASE);
 
 				if (GDevice && obj->texturecontainer[i] && !obj->texturecontainer[i]->m_pddsSurface)
 					obj->texturecontainer[i]->Restore(GDevice);
@@ -817,6 +833,7 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 
 	if (!obj)
 	{
+		printf("ARX_FTL_Load: error loading data\n");
 		free(dat);
 		return NULL;
 	}
@@ -881,5 +898,6 @@ EERIE_3DOBJ * ARX_FTL_Load(char * incomplete_fic, char * complete_fic, EERIE_3DO
 	EERIEOBJECT_CreatePFaces(obj);
 	// Now we can release our cool FTL file
 	EERIE_Object_Precompute_Fast_Access(obj);
+	printf("ARX_FTL_Load: loaded\n");
 	return obj;
 }

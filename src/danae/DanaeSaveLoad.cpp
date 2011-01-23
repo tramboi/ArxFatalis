@@ -89,6 +89,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "DanaeDlg.h"
 
 #include <hermes/PakManager.h>
+#include <hermes/Filesystem.h>
 
 #include <stdio.h>
 
@@ -214,29 +215,22 @@ void BIG_PURGE()
 
 EERIE_3DOBJ * _LoadTheObj(char * text, char * path)
 {
-	char tex[256];
-	char texx[256];
+	
 	char tex1[256];
 	EERIE_3DOBJ * wr;
-	MakeDir(texx, text);
-	File_Standardize(texx, tex);
-
+	
 	if (path == NULL)
 	{
-		char tex2[256];
-		sprintf(tex2, "%sGraph\\obj3D\\textures\\", Project.workingdir);
-		File_Standardize(tex2, tex1);
+		strcpy(tex1, "Graph\\obj3D\\textures\\");
 	}
 	else
 	{
-		char tex2[256];
-		strcpy(tex2, tex);
-		RemoveName(tex2);
-		strcat(tex2, path);
-		File_Standardize(tex2, tex1);
+		strcpy(tex1, text);
+		RemoveName(tex1);
+		strcat(tex1, path);
 	}
-
-	wr = TheoToEerie_Fast(tex1, tex, 0);
+	
+	wr = TheoToEerie_Fast(tex1, text, 0);
 	return wr;
 }
 
@@ -257,7 +251,7 @@ void ReplaceSpecifics(char * text)
 		if (!strcmp(temp, "GRAPH"))
 		{
 			strcpy(temp, text + i);
-			sprintf(text, "%s%s", Project.workingdir, temp);
+			strcpy(text, temp);
 			return;
 		}
 	}
@@ -774,17 +768,17 @@ void WriteIOInfo(INTERACTIVE_OBJ * io, char * dir)
 //*************************************************************************************
 //*************************************************************************************
 
+const char LOG_DIR_CREATION[] = "Dir_Creation.log";
+
 void LogDirCreation(char * dir)
 {
-	char dfile[256];
 	FILE * fic;
 	HERMES_DATE_TIME hdt;
 
 	if (DirectoryExist(dir))
 	{
-		sprintf(dfile, "%s\\Dir_Creation.log", Project.workingdir);
 
-		if ((fic = fopen(dfile, "a+")) != NULL)
+		if ((fic = fopen(LOG_DIR_CREATION, "a+")) != NULL)
 		{
 			char name[256];
 			unsigned num = 255;
@@ -801,15 +795,13 @@ void LogDirCreation(char * dir)
 
 void LogDirDestruction(char * dir)
 {
-	char dfile[256];
 	FILE * fic;
 	HERMES_DATE_TIME hdt;
 
 	if (DirectoryExist(dir))
 	{
-		sprintf(dfile, "%s\\Dir_Creation.log", Project.workingdir);
 
-		if ((fic = fopen(dfile, "a+")) != NULL)
+		if ((fic = fopen(LOG_DIR_CREATION, "a+")) != NULL)
 		{
 			char name[256];
 			unsigned num = 255;
@@ -928,7 +920,7 @@ INTERACTIVE_OBJ * LoadInter_Ex(DANAE_LS_INTER * dli, EERIE_3D * trans)
 	char tmp[512];
 	char tmp2[512];
 	char temp[512];
-	long FileSize;
+	size_t FileSize;
 	INTERACTIVE_OBJ * io;
 
 	sprintf(nameident, "%s_%04d", GetName(dli->name), dli->ident);
@@ -1017,17 +1009,14 @@ suite:
 		{
 			if (io->obj == NULL)
 			{
-				char temp[256];
-				char temp2[256];
-				strcpy(temp2, io->filename);
-				sprintf(temp, "%sGraph\\Obj3D\\Textures\\", Project.workingdir);
+				const char dirpath[] = "Graph\\Obj3D\\Textures\\";
 
 				if (io->ioflags & IO_ITEM)
-					io->obj = TheoToEerie_Fast(temp, temp2, 0, GDevice);
+					io->obj = TheoToEerie_Fast(dirpath, io->filename, 0, GDevice);
 				else if (io->ioflags & IO_NPC)
-					io->obj = TheoToEerie_Fast(temp, temp2, TTE_NO_PHYSICS_BOX | TTE_NPC, GDevice);
+					io->obj = TheoToEerie_Fast(dirpath, io->filename, TTE_NO_PHYSICS_BOX | TTE_NPC, GDevice);
 				else
-					io->obj = TheoToEerie_Fast(temp, temp2, TTE_NO_PHYSICS_BOX, GDevice);
+					io->obj = TheoToEerie_Fast(dirpath, io->filename, TTE_NO_PHYSICS_BOX, GDevice);
 
 				if (io->ioflags & IO_NPC)
 					EERIE_COLLISION_Cylinder_Create(io);
@@ -1075,7 +1064,7 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, char * fic)
 
 	long pos = 0;
 	long i;
-	long FileSize = 0;
+	size_t FileSize = 0;
 	char tstr[128];
 	HERMES_DATE_TIME hdt;
 	ShowCurLoadInfo("Starting Level Loading");
@@ -1156,7 +1145,7 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, char * fic)
 
 		if (FAKE_DIR)
 		{
-			strcpy(ftemp, fic + strlen(Project.workingdir));
+			strcpy(ftemp, fic);
 			RemoveName(ftemp);
 			strcpy(temp, fic);
 			RemoveName(temp);
@@ -1166,7 +1155,7 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, char * fic)
 		{
 			strcpy(ftemp, dls->name);
 			RemoveName(ftemp);
-			MakeDir(temp, dls->name);
+			strcpy(temp, dls->name);
 			RemoveName(temp);
 		}
 
@@ -1541,9 +1530,9 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, char * fic)
 
 	if (dlh.version >= 1.44f) // using compression
 	{
-		long cpr_pos;
-		char * compressed = (char *)PAK_FileLoadMalloc(fic2, &cpr_pos);
-		dat = (unsigned char *)STD_Explode(compressed, cpr_pos, &FileSize);
+		size_t size;
+		char * compressed = (char *)PAK_FileLoadMalloc(fic2, &size);
+		dat = (unsigned char *)STD_Explode(compressed, size, &FileSize);
 
 		if (dat == NULL)
 		{
@@ -2034,7 +2023,7 @@ void AddIdent(char * ident, long num)
 void ARX_SAVELOAD_DLFCheckAdd(char * path, long num)
 {
 	char fic[256];
-	sprintf(fic, "%sGraph\\Levels\\Level%s", Project.workingdir, path);
+	sprintf(fic, "Graph\\Levels\\Level%s", path);
 
 	char _error[512];
 	DANAE_LS_HEADER				dlh;
@@ -2044,7 +2033,7 @@ void ARX_SAVELOAD_DLFCheckAdd(char * path, long num)
 
 	long pos = 0;
 	long i;
-	long FileSize = 0;
+	size_t FileSize = 0;
 
 	SetExt(fic, ".DLF");
 

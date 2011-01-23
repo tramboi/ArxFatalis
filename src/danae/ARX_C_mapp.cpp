@@ -38,7 +38,6 @@ extern char AllTxt[];
 extern HWND HwndPere;
 extern char DirectoryChoose[];
 
-extern char		DirectoryAbs[];
 void ClearAbsDirectory(char * pT, char * d);
 void AddDirectory(char * pT, char * dir);
 
@@ -388,8 +387,9 @@ HBITMAP LoadTargaFile(TCHAR * strPathname)
 {
 	if (!PAK_FileExist(strPathname)) return NULL;
 
-	long siz = 0;
-	unsigned char * dat = (unsigned char *)PAK_FileLoadMalloc(strPathname, &siz);
+	size_t size = 0;
+	unsigned char * dat = (unsigned char *)PAK_FileLoadMalloc(strPathname, &size);
+	// TODO size ignored
 
 	if (NULL == dat) return NULL;
 
@@ -524,8 +524,9 @@ HBITMAP LoadBMPImage(char * strPathname)
 
 	if (!PAK_FileExist(strPathname)) return NULL;
 
-	long siz = 0;
+	size_t siz = 0;
 	unsigned char * dat = (unsigned char *)PAK_FileLoadMalloc(strPathname, &siz);
+	// TODO siz ignored
 
 	if (!dat) return NULL;
 
@@ -668,7 +669,6 @@ int CreateAllMapsForBitmap(char * dir, char * name, CINEMATIQUE * c, int n, int 
 	strcpy(AllTxt, dir);
 	strcat(AllTxt, name);
 	ClearAbsDirectory(AllTxt, "ARX\\");
-	AddDirectory(AllTxt, DirectoryAbs);
 	SetExt(AllTxt, ".BMP");
 
 	if (PAK_FileExist(AllTxt))
@@ -759,7 +759,7 @@ int CreateAllMapsForBitmap(char * dir, char * name, CINEMATIQUE * c, int n, int 
 
 			if (FAILED(D3DTextr_CreateEmptyTexture(AllTxt, w2, h2, 0, D3DTEXTR_NO_MIPMAP, NULL)))
 			{
-				sprintf(AllTxt, "Creation de le %d �me texture -> x: %d y %d w: %d h: %d", num, (long)dx, (long)dy, w2, h2);
+				sprintf(AllTxt, "Creating texture #%d -> x: %d y %d w: %d h: %d", num, (long)dx, (long)dy, w2, h2);
 				MessageBox(NULL, AllTxt, "Erreur", 0);
 			}
 

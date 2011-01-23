@@ -49,7 +49,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "Athena_Instance.h"
 #include "Athena_Global.h"
 #include "Athena_Stream.h"
-#include "Athena_FileIO.h"
 
 #include <dsound.h>
 #include <eax.h>
@@ -177,7 +176,6 @@ namespace ATHENA
 
 		if (debug_log) fclose(debug_log), debug_log = NULL;
 
-		free(root_path), root_path = NULL;
 		free(sample_path), sample_path = NULL;
 		free(ambiance_path), ambiance_path = NULL;
 		free(environment_path), environment_path = NULL;
@@ -244,13 +242,6 @@ namespace ATHENA
 		return AAL_OK;
 	}
 
-	aalError aalAddResourcePack(const char * name)
-	{
-		AddPack(name);
-
-		return AAL_OK;
-	}
-
 	aalError aalSetStreamLimit(const aalULong & limit)
 	{
 		if (mutex && WaitForSingleObject(mutex, MUTEX_TIMEOUT) == WAIT_TIMEOUT)
@@ -258,89 +249,6 @@ namespace ATHENA
 
 		stream_limit_ms = limit < 500 ? 500 : limit;
 		stream_limit_bytes = UnitsToBytes(stream_limit_ms, global_format, AAL_UNIT_MS);
-
-		if (mutex) ReleaseMutex(mutex);
-
-		return AAL_OK;
-	}
-
-	aalError aalSetRootPath(const char * _path)
-	{
-		if (mutex && WaitForSingleObject(mutex, MUTEX_TIMEOUT) == WAIT_TIMEOUT)
-			return AAL_ERROR_TIMEOUT;
-
-		char path[256] = "";
-		FILE * file = NULL;
-		aalULong len;
-
-		if (_path) strcat(path, _path);
-
-		len = strlen(path);
-
-		if (len && path[len - 1] != '\\') strcat(path, "\\");
-
-		for (aalULong i(0); i < _sample.Size(); i++)
-		{
-			Sample * sample = _sample[i];
-
-			if (sample)
-			{
-				file = FileOpen(sample->name, "rb");
-
-				if (file)
-				{
-					FileClose(file);
-
-					if (!strncmp(sample->name, path, len))
-					{
-						strcpy(sample->name, &sample->name[len]);
-						sample->name = (char *)realloc(sample->name, strlen(sample->name) + 1);
-					}
-				}
-				else if (root_path)
-				{
-					char temp[256];
-
-					strcpy(temp, root_path);
-					strcat(temp, sample->name);
-
-					if (!strncmp(temp, path, len))
-					{
-						aalVoid * ptr;
-
-						ptr = realloc(sample->name, strlen(&temp[len]) + 1);
-
-						if (!ptr)
-						{
-							if (mutex) ReleaseMutex(mutex);
-
-							return AAL_ERROR_MEMORY;
-						}
-
-						sample->name = (char *)ptr;
-						strcpy(sample->name, &temp[len]);
-					}
-				}
-			}
-		}
-
-		if (len)
-		{
-			aalVoid * ptr;
-
-			ptr = realloc(root_path, len + 1);
-
-			if (!ptr)
-			{
-				if (mutex) ReleaseMutex(mutex);
-
-				return AAL_ERROR_MEMORY;
-			}
-
-			root_path = (char *)ptr;
-			memcpy(root_path, path, len + 1);
-		}
-		else free(root_path), root_path = NULL;
 
 		if (mutex) ReleaseMutex(mutex);
 
@@ -357,17 +265,6 @@ namespace ATHENA
 			aalVoid * ptr;
 			const char * temp = _path;
 			aalULong len(strlen(_path) + 1);
-
-			if (root_path)
-			{
-				aalULong len2(strlen(root_path));
-
-				if (len2 < len && !strncasecmp(_path, root_path, len2))
-				{
-					temp += len2;
-					len -= len2;
-				}
-			}
 
 			if (len <= 1) free(sample_path), sample_path = NULL;
 			else
@@ -406,17 +303,6 @@ namespace ATHENA
 			const char * temp = _path;
 			aalULong len(strlen(_path) + 1);
 
-			if (root_path)
-			{
-				aalULong len2(strlen(root_path));
-
-				if (len2 < len && !strncasecmp(_path, root_path, len2))
-				{
-					temp += len2;
-					len -= len2;
-				}
-			}
-
 			if (len <= 1) free(ambiance_path), ambiance_path = NULL;
 			else
 			{
@@ -454,17 +340,6 @@ namespace ATHENA
 			const char * temp = _path;
 			aalULong len(strlen(_path) + 1);
 
-			if (root_path)
-			{
-				aalULong len2(strlen(root_path));
-
-				if (len2 < len && !strncasecmp(_path, root_path, len2))
-				{
-					temp += len2;
-					len -= len2;
-				}
-			}
-
 			if (len <= 1) free(environment_path), environment_path = NULL;
 			else
 			{
@@ -499,21 +374,11 @@ namespace ATHENA
 		if (mutex && WaitForSingleObject(mutex, MUTEX_TIMEOUT) == WAIT_TIMEOUT)
 			return AAL_ERROR_TIMEOUT;
 
-		if (flags & AAL_FLAG_PACKEDRESOURCES)
-			global_status |= AAL_FLAG_PACKEDRESOURCES, FileIOInit();
-
 		if (flags & AAL_FLAG_DEBUG)
 		{
 			if (debug_log) fclose(debug_log);
 
-			if (root_path)
-			{
-				char text[512];
-
-				sprintf(text, "%s%s", root_path, "athena.log");
-				debug_log = fopen(text, "w");
-			}
-			else debug_log = fopen("athena.log", "w");
+			debug_log = fopen("athena.log", "w");
 
 			if (!debug_log)
 			{
@@ -571,9 +436,6 @@ namespace ATHENA
 	{
 		if (mutex && WaitForSingleObject(mutex, MUTEX_TIMEOUT) == WAIT_TIMEOUT)
 			return AAL_ERROR_TIMEOUT;
-
-		if (flags & AAL_FLAG_PACKEDRESOURCES)
-			global_status &= ~AAL_FLAG_PACKEDRESOURCES, FileIOInit();
 
 		if (flags & AAL_FLAG_DEBUG && debug_log)
 			fclose(debug_log), debug_log = NULL;

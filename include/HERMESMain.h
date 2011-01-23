@@ -59,9 +59,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #ifndef  HERMESMAIN_H
 #define  HERMESMAIN_H
 
-#define PATH_SEPERATOR_STR "/"
-#define PATH_SEPERATOR_CHR '/'
-
 #define HERMES_PATH_SIZE	512
 
 #include "HERMESPerf.h"
@@ -79,19 +76,6 @@ typedef struct {
 	long	years;
 }HERMES_DATE_TIME;
 
-typedef struct {
-	char text[260];
-	void * previous;
-	void * next;
-	void * child;
-	void * father;
-} DIR_NODE;
-
-typedef struct {
-	 long	start;
-	 long	current;
-} HERMESTIMER;
-
 ///////////////////// PACKING
 //Always on for now...
 typedef struct PassedParam
@@ -108,50 +92,26 @@ typedef struct PassedParam
 } PARAM;
 
 
-#define	FILE_SEEK_START		0
-#define	FILE_SEEK_CURRENT	1
-#define	FILE_SEEK_END		2
-
 extern HWND		MAIN_PROGRAM_HANDLE;
 extern long DEBUGG;
 extern long DebugLvl[6];
 extern unsigned int			GaiaWM;
-extern DIR_NODE mainnode;
 
 void File_Standardize(const char * from,char * to);
 char * HERMES_GaiaCOM_Receive();
- 
-long KillAllDirectory(char * path);
+
 void HERMES_InitDebug();
 
 void SAFEstrcpy(char * dest, char * src, unsigned long max);
 
-
-void MakeUpcase_real(char * str);
 void MakeUpcase(char * str);
 unsigned char IsIn(char * strin, char * str);
 unsigned char NC_IsIn(char * strin, char * str);
 
-bool GetWorkingDirectory(char * dest);
-
-long FileExist(char *name);
-long DirectoryExist(char *name);
-long	FileOpenRead(char *name);
- 
-long	FileOpenWrite(char *name);      
-long	FileCloseWrite(long h);
-long	FileCloseRead(long h);
-long	FileRead(long h, void *adr, long size);
-long	FileWrite(long h, void *adr, long size);
-void	*FileLoadMalloc(char *name,long * filesize=NULL);
-void	*FileLoadMallocZero(char *name,long * filesize=NULL);
- 
- 
 void GetDate(HERMES_DATE_TIME * hdt);
 void SendConsole(char * dat,long level,long flag,HWND source);
 void ForceSendConsole(char * dat,long level,long flag,HWND source);
- 
- 
+
 void MemFree(void * adr);
 bool OKBox(char * text,char *title);
 void ShowPopup(char * text);
@@ -160,7 +120,6 @@ unsigned long MakeMemoryText(char * text);
 bool CreateFullPath(const char * path);
 
 // Strings Funcs
-char *StringCopy(char * destination,char * source,long maxsize);
 bool HERMESFolderSelector(char *file_name,char *title);
 void RemoveName(char *str);
 char * GetName(char *str);
@@ -170,15 +129,15 @@ void AddToName(char *str,char *cat);
 int HERMESFileSelectorOpen(const char * pstrFileName, const char * pstrTitleName,char *filter,HWND hWnd);
 int HERMESFileSelectorSave(const char * pstrFileName, const char * pstrTitleName,char *filter,HWND hWnd);
 long HERMES_CreateFileCheck(const char *name, char *scheck, const long &size, const float &id);
-char * STD_Explode(char * from,long from_size,long * to_size);
-void STD_ExplodeNoAlloc(char * from,long from_size,char * to,long * to_size);
+char * STD_Explode(char * from, size_t from_size, size_t * to_size);
+void STD_ExplodeNoAlloc(char * from, size_t from_size,char * to,size_t * to_size);
 void ERROR_Log_Init(char * fic);
 bool ERROR_Log(char * fic);
 void HERMES_Memory_Security_On(long size);
 void HERMES_Memory_Security_Off();
 long HERMES_Memory_Emergency_Out(long size=0,char * info=NULL);
-extern LARGE_INTEGER	start_chrono;
 void StartBench();
 unsigned long EndBench();
 extern long NEED_BENCH;
+
 #endif // HERMESMAIN_H
