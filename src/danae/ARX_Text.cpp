@@ -54,6 +54,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 //////////////////////////////////////////////////////////////////////////////////////
 #include <windows.h>
 #include <tchar.h>
+#include <assert.h>
 
 #include "ARX_Loc.h"
 #include "ARX_Text.h"
@@ -62,9 +63,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "EERIEDraw.h"
 #include "HERMESMain.h"
 
-#include <assert.h>
-
-#include <hermes/Filesystem.h>
+#include "hermes/Filesystem.h"
+#include "hermes/Logger.h"
 
 //-----------------------------------------------------------------------------
 std::string lpszFontMenu;
@@ -111,7 +111,7 @@ void FontError()
 	);
 
 //	MessageBox(NULL, (LPCSTR)lpMsgBuf, (LPCSTR)"Font Error", MB_OK | MB_ICONINFORMATION);
-	printf("Font Error\n");
+	LogError << "Font Error: " << (LPCSTR)lpMsgBuf;
 #endif
 }
 //-----------------------------------------------------------------------------
@@ -501,7 +501,7 @@ long UNICODE_ARXDrawTextCenteredScroll(float x, float y, float x2, std::string& 
 void ARX_Allocate_Text( std::string& dest, const std::string& id_string)
 {
     std::string output;
-    PAK_UNICODE_GetPrivateProfileString(id_string, "string", "default", output, 4096, NULL);
+    PAK_UNICODE_GetPrivateProfileString(id_string, "default", output, 4096);
     dest = output;
 }
 
@@ -1225,7 +1225,7 @@ void ARX_Text_Init()
         int iFontSize = 48;//58;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_mainmenu_size", "string", "58", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_mainmenu_size", "58", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1249,7 +1249,7 @@ void ARX_Text_Init()
         int iFontSize = 32;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_menu_size", "string", "32", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_menu_size", "32", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1273,7 +1273,7 @@ void ARX_Text_Init()
         int iFontSize = 16;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_menucontrols_size", "string", "22", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_menucontrols_size", "22", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1297,7 +1297,7 @@ void ARX_Text_Init()
         int iFontSize = 32;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_menucredits_size", "string", "36", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_menucredits_size", "36", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1321,7 +1321,7 @@ void ARX_Text_Init()
         int iFontSize = 16;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_redist_size", "string", "18", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_redist_size", "18", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1348,7 +1348,7 @@ void ARX_Text_Init()
         int iFontSize = 16;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_book_size", "string", "18", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_book_size", "18", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1372,7 +1372,7 @@ void ARX_Text_Init()
         int iFontSize = 16;//18;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_note_size", "string", "18", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_note_size", "18", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);
@@ -1393,7 +1393,7 @@ void ARX_Text_Init()
         int iFontSize = 16;
 
         std::string szUT;
-        PAK_UNICODE_GetPrivateProfileString( "system_font_book_size", "string", "18", szUT, 256, NULL);
+        PAK_UNICODE_GetPrivateProfileString( "system_font_book_size", "18", szUT, 256);
         ss << szUT;
         ss >> iFontSize;
         iFontSize = Traffic(iFontSize);

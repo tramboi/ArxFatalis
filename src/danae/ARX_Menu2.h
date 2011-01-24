@@ -977,4 +977,6 @@ bool ARX_QuickLoad();
 void ARX_QuickSave();
 void ARX_DrawAfterQuickLoad();
 
+void GetTextSize(HFONT _hFont, const char * _lpszUText, int * _iWidth, int * _iHeight);
+
 #endif

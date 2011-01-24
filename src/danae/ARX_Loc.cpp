@@ -327,7 +327,8 @@ void ParseFile(_TCHAR * _lpszUTextFile, const unsigned long _ulFileSize)
 char LocalisationLanguage = -1;
 
 //-----------------------------------------------------------------------------
-void ARX_Localisation_Init(char * _lpszExtension) 
+// TODO parameter not really used.
+void ARX_Localisation_Init(const char * _lpszExtension) 
 {
 	if (_lpszExtension == NULL)
 		return;
@@ -377,7 +378,7 @@ void ARX_Localisation_Init(char * _lpszExtension)
 	if (FINAL_COMMERCIAL_DEMO)
 	{
 		std::string szMenuText;
-		PAK_UNICODE_GetPrivateProfileString( "system_menus_main_cdnotfound", "string", "", szMenuText, 256, NULL);
+		PAK_UNICODE_GetPrivateProfileString( "system_menus_main_cdnotfound", "", szMenuText, 256);
 
 		if (!szMenuText[0]) //warez
 		{
@@ -388,7 +389,7 @@ void ARX_Localisation_Init(char * _lpszExtension)
 	if (FINAL_COMMERCIAL_GAME)
 	{
 		std::string szMenuText;
-		PAK_UNICODE_GetPrivateProfileString( "unicode", "string", "", szMenuText, 256, NULL);
+		PAK_UNICODE_GetPrivateProfileString( "unicode", "", szMenuText, 256);
 
 		if (szMenuText[0]) //warez
 		{
@@ -411,12 +412,9 @@ void ARX_Localisation_Close()
 
 //-----------------------------------------------------------------------------
 long HERMES_UNICODE_GetProfileString(   const std::string&  sectionname,
-                                        const std::string&  t_keyname,
                                         const std::string&  defaultstring,
                                         std::string&        destination,
-                                        unsigned long       maxsize,
-                                        const std::string&  datastream,
-                                        long                lastspeech)
+                                        unsigned long       maxsize)
 {
 
     destination.clear();
@@ -449,30 +447,25 @@ static long ltNum = 0;
 
 //-----------------------------------------------------------------------------
 int PAK_UNICODE_GetPrivateProfileString(    const std::string&  _lpszSection,
-                                            const std::string&  _lpszKey,
                                             const std::string&  _lpszDefault,
                                             std::string&        _lpszBuffer,
-                                            unsigned long       _lBufferSize,
-                                            const std::string&  _lpszFileName )
+                                            unsigned long       _lBufferSize )
 {
     ltNum ++;
     _lpszBuffer.clear();
 
     if ( _lpszSection.empty() )
     {
-        _lpszBuffer = _lpszDefault + ":NOT FOUND";
+        _lpszBuffer = _lpszDefault + ": NOT FOUND";
         return 0;
     }
 
     std::string szSection = "[" + _lpszSection + "]";
 
     HERMES_UNICODE_GetProfileString( szSection,
-                                    _lpszKey,
                                     _lpszDefault,
                                     _lpszBuffer,
-                                    _lBufferSize,
-                                    NULL,
-                                    -1); //lastspeechflag
+                                    _lBufferSize);
 
     return 1;
 }

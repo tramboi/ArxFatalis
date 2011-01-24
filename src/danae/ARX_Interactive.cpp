@@ -232,7 +232,7 @@ void ARX_INTERACTIVE_ForceIOLeaveZone(INTERACTIVE_OBJ * io, long flags)
 				char tex2[128];
 				strcpy(texx, GetName(io->filename).c_str());
 
-				sprintf(tex2, "%s_%04d %s", texx, io->ident, temp.c_str());
+				sprintf(tex2, "%s_%04ld %s", texx, io->ident, temp.c_str());
 				SendIOScriptEvent(inter.iobj[t], SM_CONTROLLEDZONE_LEAVE, tex2, NULL); 
 			}
 		}
@@ -1163,14 +1163,14 @@ void MakeNodeName(long i)
 	char name[64];
 	long o;
 	//float f;
-	sprintf(name, "NODE_%08d", i);
+	sprintf(name, "NODE_%08ld", i);
 
 	while (ExistNodeName(name))
 	{
 		//f=rnd()*99999999.f;
 		//o=(long)f;
 		F2L(rnd() * 99999999.f, &o);
-		sprintf(name, "NODE_%08d", o);
+		sprintf(name, "NODE_%08ld", o);
 	}
 
 	strcpy(nodes.nodes[i].name, name);
@@ -2195,7 +2195,7 @@ void ARX_INTERACTIVE_Teleport(INTERACTIVE_OBJ * io, EERIE_3D * target, long flag
 //*************************************************************************************
 // Finds IO number by name
 //*************************************************************************************
-long GetTargetByNameTarget(char * name)
+long GetTargetByNameTarget(const char * name)
 {
 	char temp[256];
 
@@ -2214,7 +2214,7 @@ long GetTargetByNameTarget(char * name)
 		if ((inter.iobj[i] != NULL)
 		        &&	(inter.iobj[i]->ident > -1))
 		{
-			sprintf(temp, "%s_%04d", GetName(inter.iobj[i]->filename).c_str(), inter.iobj[i]->ident);
+			sprintf(temp, "%s_%04ld", GetName(inter.iobj[i]->filename).c_str(), inter.iobj[i]->ident);
 
 			if (!strcasecmp(name, temp)) return i;
 		}
@@ -3296,7 +3296,7 @@ bool ExistTemporaryIdent(INTERACTIVE_OBJ * io, long t)
 	char name1[256];
 	char ident[256];;
 	strcpy(name1, GetName(io->filename).c_str());
-	sprintf(ident, "%s_%04d", name1, t);
+	sprintf(ident, "%s_%04ld", name1, t);
 
 	for (long i = 0; i < inter.nbmax; i++)
 	{
@@ -4180,10 +4180,10 @@ void UpdateCameras()
 					if (last == -2)
 					{
 						char str[16];
-						sprintf(str, "%d", aup->path->nb_pathways - 1);
+						sprintf(str, "%ld", aup->path->nb_pathways - 1);
 						EVENT_SENDER = NULL;
 						SendIOScriptEvent(io, SM_WAYPOINT, str, NULL);
-						sprintf(str, "WAYPOINT%d", aup->path->nb_pathways - 1);
+						sprintf(str, "WAYPOINT%ld", aup->path->nb_pathways - 1);
 						SendIOScriptEvent(io, 0, "", str);
 						SendIOScriptEvent(io, SM_PATHEND, "", NULL);
 						aup->lastWP = last;
@@ -4201,10 +4201,10 @@ void UpdateCameras()
 						long ii = _from + 1;
 						
 						char str[16];
-						sprintf(str, "%d", ii);
+						sprintf(str, "%ld", ii);
 						EVENT_SENDER = NULL;
 						SendIOScriptEvent(io, SM_WAYPOINT, str, NULL);
-						sprintf(str, "WAYPOINT%d", ii);
+						sprintf(str, "WAYPOINT%ld", ii);
 						SendIOScriptEvent(io, 0, "", str);
 
 						if (ii == aup->path->nb_pathways)

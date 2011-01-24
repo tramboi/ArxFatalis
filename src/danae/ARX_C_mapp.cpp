@@ -41,8 +41,6 @@ extern std::string AllTxt;
 extern HWND HwndPere;
 extern char DirectoryChoose[];
 
-void ClearAbsDirectory(char * pT, char * d);
-void AddDirectory(char * pT, char * dir);
 
 /*-----------------------------------------------------------*/
 void FreeGrille(C_GRILLE * grille);

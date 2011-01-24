@@ -87,7 +87,6 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include <ARX_Special.h>
 #include <ARX_Speech.h>
 #include <ARX_Spells.h>
-#include "ARX_HWTransform.h"
 #include "ARX_Time.h"
 #include "DanaeDlg.h"
 
@@ -207,7 +206,7 @@ void BIG_PURGE()
 		}
 
 		char text[256];
-		sprintf(text, "Killed: %d IO; %d Lights; %d Paths; %d Fogs.",
+		sprintf(text, "Killed: %ld IO; %ld Lights; %ld Paths; %ld Fogs.",
 		        IO_count, LIGHT_count, PATH_count, FOG_count);
 		ShowPopup(text);
 	}
@@ -216,7 +215,7 @@ void BIG_PURGE()
 //*************************************************************************************
 //*************************************************************************************
 
-EERIE_3DOBJ * _LoadTheObj(char * text, char * path)
+EERIE_3DOBJ * _LoadTheObj(const char * text, const char * path)
 {
 	
 	std::string tex1;
@@ -310,7 +309,7 @@ long DanaeSaveLevel( std::string& fic)
 	GetDate(&hdt);
 	char tx[128];
 	char newtext[128];
-	sprintf(tx, "_%02d_%02d_%d__%dh%dmn", hdt.months, hdt.days, hdt.years, hdt.hours, hdt.mins);
+	sprintf(tx, "_%02ld_%02ld_%ld__%ldh%ldmn", hdt.months, hdt.days, hdt.years, hdt.hours, hdt.mins);
 	SetExt(fic, ".DLF");
 
 	if (FileExist(fic.c_str()))
@@ -756,13 +755,13 @@ void WriteIOInfo(INTERACTIVE_OBJ * io, char * dir)
 		{
 			char name[256];
 			unsigned num = 255;
-			fprintf(fic, "Object   : %s%04d\n", temp, io->ident);
+			fprintf(fic, "Object   : %s%04ld\n", temp, io->ident);
 			fprintf(fic, "_______________________________\n\n");
 			GetUserName(name, &num);
 			fprintf(fic, "Creator  : %s\n", name);
 			GetDate(&hdt);
-			fprintf(fic, "Date     : %02d/%02d/%d\n", hdt.days, hdt.months, hdt.years);
-			fprintf(fic, "Time     : %dh%d\n", hdt.hours, hdt.mins);
+			fprintf(fic, "Date     : %02ld/%02ld/%ld\n", hdt.days, hdt.months, hdt.years);
+			fprintf(fic, "Time     : %ldh%ld\n", hdt.hours, hdt.mins);
 			fprintf(fic, "Level    : %s\n", LastLoadedScene);
 
 			if (LastLoadedDLF[0] != 0)
@@ -796,7 +795,7 @@ void LogDirCreation(char * dir)
 			unsigned num = 255;
 			GetUserName(name, &num);
 			GetDate(&hdt);
-			fprintf(fic, "%02d/%02d/%4d %2dh%02d %s  %s\n", hdt.days, hdt.months, hdt.years, hdt.hours, hdt.mins, dir, name);
+			fprintf(fic, "%02ld/%02ld/%4ld %2ldh%02ld %s  %s\n", hdt.days, hdt.months, hdt.years, hdt.hours, hdt.mins, dir, name);
 			fclose(fic);
 		}
 	}
@@ -819,7 +818,7 @@ void LogDirDestruction(char * dir)
 			unsigned num = 255;
 			GetUserName(name, &num);
 			GetDate(&hdt);
-			fprintf(fic, "%02d/%02d/%4d %2dh%02d DESTROYED %s  %s\n", hdt.days, hdt.months, hdt.years, hdt.hours, hdt.mins, dir, name);
+			fprintf(fic, "%02ld/%02ld/%4ld %2ldh%02ld DESTROYED %s  %s\n", hdt.days, hdt.months, hdt.years, hdt.hours, hdt.mins, dir, name);
 			fclose(fic);
 		}
 	}
@@ -907,7 +906,7 @@ void SaveIOScript(INTERACTIVE_OBJ * io, long fl)
 				temp = io->filename;
 				strcpy(temp2, GetName(temp).c_str());
 				RemoveName(temp);
-				sprintf(temp3, "%s%s_%04d", temp.c_str(), temp2, io->ident);
+				sprintf(temp3, "%s%s_%04ld", temp.c_str(), temp2, io->ident);
 				temp = temp3;
                 temp += "\\";
                 temp += temp2;
@@ -941,7 +940,7 @@ INTERACTIVE_OBJ * LoadInter_Ex(DANAE_LS_INTER * dli, EERIE_3D * trans)
 	size_t FileSize;
 	INTERACTIVE_OBJ * io;
 
-	sprintf(nameident, "%s_%04d", GetName(dli->name).c_str(), dli->ident);
+	sprintf(nameident, "%s_%04ld", GetName(dli->name).c_str(), dli->ident);
 	long t;
 	t = GetTargetByNameTarget(nameident);
 
@@ -951,7 +950,7 @@ INTERACTIVE_OBJ * LoadInter_Ex(DANAE_LS_INTER * dli, EERIE_3D * trans)
 		goto suite;
 	}
 
-	sprintf(nameident, "%s_%04d", GetName(dli->name).c_str(), dli->ident);
+	sprintf(nameident, "%s_%04ld", GetName(dli->name).c_str(), dli->ident);
 
 	t = GetTargetByNameTarget(nameident);
 
@@ -1062,7 +1061,7 @@ extern long DEBUGCODE;
 //*************************************************************************************
 
 extern char  _CURRENTLOAD_[256];
-void ShowCurLoadInfo(char * string)
+void ClearCurLoadInfo()
 {
 	memset(_CURRENTLOAD_, 0, 256);
 }
@@ -1091,10 +1090,11 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 	size_t FileSize = 0;
 	char tstr[128];
 	HERMES_DATE_TIME hdt;
-	ShowCurLoadInfo("Starting Level Loading");
+	printf("Starting Level Loading\n");
+	ClearCurLoadInfo();
 	CURRENTLEVEL = GetLevelNumByName(fic.c_str());
 	GetDate(&hdt);
-	sprintf(tstr, "%2dh%02dm%02d LOADLEVEL start", hdt.hours, hdt.mins, hdt.secs);
+	sprintf(tstr, "%2ldh%02ldm%02ld LOADLEVEL start", hdt.hours, hdt.mins, hdt.secs);
 	ForceSendConsole(tstr, 1, 0, (HWND)1);
 	SetExt(fic, ".DLF");
 	std::string fic2 = fic;
@@ -1249,7 +1249,8 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 	MSP.y = trans.y;
 	MSP.z = trans.z;
 
-	ShowCurLoadInfo("Loading Interactive Objects");
+	ClearCurLoadInfo();
+	printf("Loading Interactive Objects\n");
 
 
 
@@ -1402,7 +1403,8 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 		pos += sizeof(DANAE_LS_LIGHT) * dlh.nb_lights;
 	}
 
-	ShowCurLoadInfo("Loading FOGS");
+	ClearCurLoadInfo();
+	printf("Loading FOGS\n");
 	ARX_FOGS_Clear();
 
 	for (i = 0; i < dlh.nb_fogs; i++)
@@ -1451,7 +1453,8 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 	PROGRESS_BAR_COUNT += 2.f;
 	LoadLevelScreen();
 
-	ShowCurLoadInfo("Loading Nodes");
+	ClearCurLoadInfo();
+	printf("Loading Nodes\n");
 	ClearNodes();
 
 	for (i = 0; i < dlh.nb_nodes; i++)
@@ -1480,7 +1483,8 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 
 	RestoreNodeNumbers();
 
-	ShowCurLoadInfo("Loading Paths");
+	ClearCurLoadInfo();
+	printf("Loading Paths\n");
 	ARX_PATH_ReleaseAllPath();
 	DANAE_LS_PATH  * dlp;
 	DANAE_LS_PATHWAYS  * dlpw;
@@ -1550,7 +1554,8 @@ long DanaeLoadLevel(LPDIRECT3DDEVICE7 pd3dDevice, std::string& fic)
 		goto finish;
 	}
 
-	ShowCurLoadInfo("Loading LLF Info");
+	ClearCurLoadInfo();
+	printf("Loading LLF Info\n");
 
 	if (dlh.version >= 1.44f) // using compression
 	{
@@ -1888,7 +1893,6 @@ void DanaeClearLevel(long flag)
 	bGToggleCombatModeWithKey = false;
 	bGCroucheToggle = false;
 
-	ARX_HWTransform_Kill();
 	INTERTRANSPOLYSPOS = 0;
 
 	for (long i = 0; i < MAX_DYNLIGHTS; i++) // DynLight 0 is reserved for torch & flares !
@@ -2030,7 +2034,7 @@ void AddIdent( std::string& ident, long num)
 	{
 		dlfcheck[n].occurence++;
 		char temp[64];
-		sprintf(temp, "%d ", num);
+		sprintf(temp, "%ld ", num);
 
 		if (strlen(dlfcheck[n].nums) < 500)
 			strcat(dlfcheck[n].nums, temp);
@@ -2040,7 +2044,7 @@ void AddIdent( std::string& ident, long num)
 		dlfcheck = (DLFCHECK *)realloc(dlfcheck, sizeof(DLFCHECK) * (dlfcount + 1));
 		strcpy(dlfcheck[dlfcount].ident, ident.c_str());
 		dlfcheck[dlfcount].occurence = 1;
-		sprintf(dlfcheck[dlfcount].nums, "%d ", num);
+		sprintf(dlfcheck[dlfcount].nums, "%ld ", num);
 		dlfcount++;
 	}
 }
@@ -2131,7 +2135,7 @@ void ARX_SAVELOAD_CheckDLFs()
 	for (long n = 0; n < 24; n++)
 	{
 		char temp[256];
-		sprintf(temp, "%d\\Level%d.dlf", n, n);
+		sprintf(temp, "%ld\\Level%ld.dlf", n, n);
 		ARX_SAVELOAD_DLFCheckAdd(temp, n);
 	}
 
@@ -2141,7 +2145,7 @@ void ARX_SAVELOAD_CheckDLFs()
 
 		if (dlfcheck[n].occurence > 1)
 		{
-			sprintf(text, "Found %d times : %s in levels %s", dlfcheck[n].occurence, dlfcheck[n].ident, dlfcheck[n].nums);
+			sprintf(text, "Found %ld times : %s in levels %s", dlfcheck[n].occurence, dlfcheck[n].ident, dlfcheck[n].nums);
 			ShowPopup(text);
 		}
 	}

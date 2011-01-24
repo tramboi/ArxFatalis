@@ -144,13 +144,6 @@ std::string GetFontName( char *);
 void _ShowText(char * text);
 
 //-----------------------------------------------------------------------------
-long HERMES_UNICODE_GetProfileString( const std::string& sectionname,
-                                     const std::string& keyname,
-                                     const std::string& defaultstring,
-                                     std::string& destination,
-                                     unsigned long maxsize,
-                                     const std::string& datastream,
-                                     long lastspeech);
 
 //-----------------------------------------------------------------------------
 

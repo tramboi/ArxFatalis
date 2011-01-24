@@ -79,7 +79,6 @@ typedef struct
 } SCR_TIMER;
 
 typedef struct
-{
     std::string name;
 } SCRIPT_EVENT;
 
@@ -436,7 +435,7 @@ void ClearSubStack(EERIE_SCRIPT * es);
 
 //-----------------------------------------------------------------------------
 
-long MakeLocalised( const std::string& text, std::string& output, long maxsize, long lastspeechflag = 0);
+long MakeLocalised(const std::string& text, std::string& output, long maxsize);
 
 //-----------------------------------------------------------------------------
 long specialstrcmp( const std::string& text, const std::string& seek);
@@ -445,11 +444,10 @@ long NotifyIOEvent(INTERACTIVE_OBJ * io, long msg, const std::string& params);
 void ForceAnim(INTERACTIVE_OBJ * io, ANIM_HANDLE * ea);
 
 long ARX_SPEECH_AddLocalised(INTERACTIVE_OBJ * io, const std::string& text, long duration = -1);
-long ARX_SPEECH_ForceLocalised(INTERACTIVE_OBJ * io, const std::string& text, long duration = -1);
 
-long SendIOScriptEvent(INTERACTIVE_OBJ * io, long msg, const std::string& params, const std::string& eventname = "" );
+long SendIOScriptEvent(INTERACTIVE_OBJ * io, long msg, const std::string& params, const std::string& eventname = std::string() );
 long SendScriptEvent(EERIE_SCRIPT * es, long msg, const std::string& params, INTERACTIVE_OBJ * io, const std::string& eventname, long info = 0);
-long SendMsgToAllIO(long msg, char * dat);
+long SendMsgToAllIO(long msg, const char * dat);
 
 void Stack_SendIOScriptEvent(INTERACTIVE_OBJ * io, long msg, const std::string& params, const std::string& eventname);
 bool InSubStack(EERIE_SCRIPT * es, long pos);
